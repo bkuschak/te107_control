@@ -34,6 +34,7 @@ class Device:
     def __init__(self, host, port=5025,timeout=None,*args, **kwargs):
         self._host = host
         self._port = port
+        self._conn = None
         self.timeout = timeout
         # print('making conn {}:{}'.format(host,port))
         self._conn = kwargs.get('conn', _socket.create_connection((self._host,self._port),timeout=timeout))
@@ -82,8 +83,9 @@ class Device:
         return self._id 
 
     def __del__(self):
-        unregister(self._conn.close)
-        self._conn.close()
+        if self._conn:
+            unregister(self._conn.close)
+            self._conn.close()
 
 class F4TController (Device):
     def __init__(self, set_point:float=22.0, units:TempUnits=TempUnits.C, profile:int=1,*args,**kwargs):
