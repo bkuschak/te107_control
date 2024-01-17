@@ -39,6 +39,7 @@ class Device:
         # print('making conn {}:{}'.format(host,port))
         self._conn = kwargs.get('conn', _socket.create_connection((self._host,self._port),timeout=timeout))
         self._id = kwargs.get('id', None)
+        self._debug = kwargs.get('debug', False)
         self.encoding = kwargs.get('encoding', 'ascii')
         self.EOL = b'\n'
         if self._id is None:
@@ -67,9 +68,12 @@ class Device:
         except _socket.timeout:
             pass
         # print('return')
-        return msg.decode(self.encoding).strip()
+        rx = msg.decode(self.encoding).strip()
+        if self._debug: print('RX: {}'.format(rx))
+        return rx
 
     def send_cmd(self,cmd:str):
+        if self._debug: print('TX: {}'.format(cmd))
         self._conn.send(cmd.encode(self.encoding)+self.EOL)
 
     def get_id(self):
