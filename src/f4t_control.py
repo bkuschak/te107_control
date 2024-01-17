@@ -1,20 +1,20 @@
 
 from time import sleep as _sleep
 import socket as _socket
-from enum import Enum as _Enum
+from enum import StrEnum as _StrEnum
 from atexit import register, unregister
 
 # Buffer size to scan for when recieveing over the socket 
 BUF_CHUNK = 10
 
-class TempUnits(_Enum):
+class TempUnits(_StrEnum):
     """
     Enumeration class to represent Temperature Units of the controller
     """
     C = 'C'
     F = 'F'
 
-class RampScale(_Enum):
+class RampScale(_StrEnum):
     """
     Enumeration class to represent The timescale for the Ramp commands of to controller
     """
@@ -120,7 +120,7 @@ class F4TController (Device):
     def set_units(self, units:TempUnits=None):
         if units is None:
             units = self.temp_units
-        self.send_cmd(':UNITS:TEMPERATURE {}'.format(units.value))
+        self.send_cmd(':UNIT:TEMPERATURE {}'.format(units.value))
 
     def set_ramp_scale(self,ramp_scale,cloop=1):
         scale = RampScale(ramp_scale)
