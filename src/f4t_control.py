@@ -148,6 +148,12 @@ class F4TController (Device):
 
     def get_temperature(self,cloop=1):
         self.send_cmd(':SOURCE:CLOOP{}:PVALUE?'.format(cloop))
+        _sleep(0.2)
+        return self._readline()
+
+    def get_temperature_setpoint(self,cloop=1):
+        self.send_cmd(':SOURCE:CLOOP{}:SPOINT?'.format(cloop))
+        _sleep(0.2)
         return self._readline()
 
     def set_temperature(self,temp,cloop=1):
@@ -214,3 +220,4 @@ if __name__ == "__main__":
     print('done')
 
     # x.set_temperature(22.0)
+
