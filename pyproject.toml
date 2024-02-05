@@ -1,0 +1,19 @@
+[project]
+name = "te107_control"
+version = "0.0.1"
+authors = [
+  { name="DAsh0244", email="email_not_available@none.none" },
+]
+description = "Python library for controlling TestEquity TE series Temperature Chambers"
+readme = "README.md"
+requires-python = ">=3.0"
+license = { file = "LICENSE.txt" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/DAsh0244/te107_control"
+Issues = "https://github.com/DAsh0244/te107_control/issues"

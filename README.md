@@ -19,10 +19,15 @@ This library only uses built-in python libraries.
 1. Install [Python](https://www.python.org/downloads/)
 2. Install [Git](https://git-scm.com/downloads)
    - Ensure to add git to your `PATH` if it is not already.
-3. Clone this repository:
+3. Install packaging scripts:
+   - `sudo apt install python3-pip`
+   - `sudo apt install python3-venv`
+4. Clone this repository:
    - `git clone https://github.com/an-oreo/te107_control`
-4. Ensure to include the file `f4t_control.py` in your project to use. 
-5. In the file you intend ot use this, ensure to `import f4t_control` 
+5. Package and install:
+   - `python3 -m build`
+   - `python3 -m pip install --break-system-packages dist/te107_control-0.0.1.tar.gz`
+6. In the file you intend to use this, ensure to `import f4t_control`
 
 ## Example Usage:
 ```python
