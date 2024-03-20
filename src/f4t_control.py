@@ -349,8 +349,11 @@ if __name__ == "__main__":
 
     # Example usage:
     #run_cycles(num_cycles=100, cascade_option=True)
-    run_cycles(host='100.115.106.131', num_cycles=2, low_temp=25, high_temp=27,
-               time_at_low_temp=1, time_at_high_temp=1,
-               cascade_option=False)
+    #run_cycles(host='100.115.106.131', num_cycles=2, low_temp=25, high_temp=27,
+               #time_at_low_temp=1, time_at_high_temp=1,
+               #cascade_option=False)
+    run_cycles(host='100.115.106.129', num_cycles=2, low_temp=18, high_temp=22,
+               time_at_low_temp=5, time_at_high_temp=5,
+               cascade_option=True)
     exit(0)
 
