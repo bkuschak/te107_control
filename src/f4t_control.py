@@ -1,5 +1,6 @@
-
 from time import sleep as _sleep
+from time import monotonic as _monotonic
+from time import time as _time
 import socket as _socket
 from enum import StrEnum as _StrEnum
 from atexit import register, unregister
@@ -129,6 +130,7 @@ class F4TController (Device):
         _sleep(0.2)
         resp = self._readline()
         self.temp_units = TempUnits(resp)        
+        return self.temp_units
 
     def set_units(self, units:TempUnits=None):
         if units is None:
@@ -235,6 +237,7 @@ class F4TController (Device):
             self.send_cmd(':SOURCE:CASCADE{}:SPOINT {} '.format(cloop,temp))
         else:
             self.send_cmd(':SOURCE:CLOOP{}:SPOINT {}'.format(cloop,temp))
+        _sleep(0.2)
 
     def query_input_error(self, cloop=1):
         # Cascade option requires use of different commands.
@@ -261,62 +264,93 @@ class F4TController (Device):
  
 
 if __name__ == "__main__":
-    start = 5
-    stop = 125
-    step = 5
-    ramp_time_min = 3.0
-    soak_time_min = 7.0
-    temps = range(start,stop+step,step)
-    #x = F4TController(host='169.254.250.143',timeout=1)
-    x = F4TController(host='100.115.106.129', timeout=1, cascade_option=True, debug=True)
-    x.set_units(TempUnits.C)  # Why does this fail?
-    x.get_units()
-    x.set_ramp_action(RampAction.OFF)
-    sp = x.get_temperature_setpoint()
-    print(sp)
-    print(x.get_temperature())
-    print(x.temp_units)
-    x.set_temperature(sp+1)
-    while True:
-        _sleep(1)
-        print(x.get_temperature_setpoint())
-        print(x.get_temperature())
 
+    # Simple example.
+    # Run a fixed number of cycles, with no ramp control.
+    # Dwell for a fixed amount of time after setting low and high setpoints.
+    # Temperatures in deg C.  Times in minutes.
+    # host is name or IP address of the controller.
+    # Set cascade_option=True if the F4T has cascade option installed.
+    def run_cycles( host='100.115.106.129', cascade_option=False, 
+                    num_cycles=100, low_temp=-40, high_temp=85, 
+                    time_at_low_temp=60, time_at_high_temp=60, 
+                    logfile='chamber_log.txt'):
+        debug = False
+        #debug = True
+
+        # Connect to chamber controller
+        print('Connecting to', host, '...')
+        chamber = F4TController(host=host, timeout=3,
+                                cascade_option=cascade_option, debug=debug)
+        chamber.set_units(TempUnits.C)
+        print('Chamber temperature units set to:', chamber.get_units())
+
+        # No ramping. Maximum rate of change.
+        chamber.set_ramp_action(RampAction.OFF)
+        
+        # Log chamber temps to file.
+        log = None
+        if logfile != None:
+            print('Logging temperatures to file:', logfile)
+            log = open(logfile, 'a')
+
+        # Sweep across temperatures. 
+        # Just use fixed times, don't delay based on actual temperature.
+        for i in range(num_cycles):
+            print('Cycle number', i+1, 'of', num_cycles)
+
+            # Goto low temperature setpoint.
+            print('Setting chamber setpoint:', low_temp)
+            chamber.set_temperature(low_temp)
+
+            # Delay until ready to go to high temp setpoint
+            print('Delaying for', time_at_low_temp, 'minutes')
+            timeout = _monotonic() + time_at_low_temp*60
+            while _monotonic() < timeout:
+                temp = chamber.get_temperature()
+                print('Current temperature:', temp)
+                if log:
+                    log.write('{} {}\n'.format(_time(), temp))
+                    log.flush()
+                _sleep(5)
+
+            # Goto high temperature setpoint.
+            print('Setting chamber setpoint:', high_temp)
+            chamber.set_temperature(high_temp)
+
+            # Delay until ready to go to low temp setpoint
+            print('Delaying for', time_at_high_temp, 'minutes')
+            timeout = _monotonic() + time_at_high_temp*60
+            while _monotonic() < timeout:
+                temp = chamber.get_temperature()
+                print('Current temperature:', temp)
+                if log:
+                    log.write('{} {}\n'.format(_time(), temp))
+                    log.flush()
+                _sleep(5)
+
+        # Cycles complete. Goto room temperature.
+        print('Setting chamber setpoint:', 20)
+        chamber.set_temperature(20)
+
+        # Delay 10 minutes to allow temperature to settle
+        print('Delaying for', 10, 'minutes')
+        timeout = _monotonic() + 10*60
+        while _monotonic() < timeout:
+            temp = chamber.get_temperature()
+            print('Current temperature:', temp)
+            if log:
+                log.write('{} {}\n'.format(_time(), temp))
+                log.flush()
+            _sleep(5)
+
+        log.close()
+        return
+
+    # Example usage:
+    #run_cycles(num_cycles=100, cascade_option=True)
+    run_cycles(host='100.115.106.131', num_cycles=2, low_temp=25, high_temp=27,
+               time_at_low_temp=1, time_at_high_temp=1,
+               cascade_option=False)
     exit(0)
-
-    #x.get_profiles()
-    #print(x.profiles)
-    # x.set_temperature(5)
-    # x.send_cmd(':SOURCE:CLOOP1:SPOINT?') 
-    # sleep(0.2)
-    # print(x._readline())
-    # x.set_output(1,'ON')
-    # x.set_temperature(50)
-    # 1 is 5 - 125
-    # x.select_profile(1)
-    _sleep(0.5)
-    x.send_cmd(':PROGRAM:NAME?')
-    _sleep(0.5)
-    print(x._readline().strip())
-    x.set_ramp_time(ramp_time_min)
-    x.set_ramp_scale(RampScale.MINUTES)
-    for temp in temps:
-        x.set_temperature(temp)
-        _sleep(ramp_time_min*60)
-        while abs(x.get_temperature() - temp) > 0.2:
-            _sleep(1.0)
-        # begin soak
-        print('beginning soak at temp {}'.format(x.get_temperature()))
-        _sleep(soak_time_min*60)
-    # x.run_profile()
-    # sleep(0.5)
-    try:
-        while True:
-            print(x.get_temperature())
-            _sleep(1)
-    except KeyboardInterrupt:
-        pass 
-    print('done')
-
-    # x.set_temperature(22.0)
 
